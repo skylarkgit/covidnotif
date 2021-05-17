@@ -54,6 +54,7 @@ const zeroPad = (num, places) => String(num).padStart(places, "0");
     )
       .then((res) => res.json())
       .then((data) => {
+        console.log(JSON.stringify(data))
         data.centers.forEach((center) => {
           const availability = center.sessions.reduce(
             (c, sess) => c + sess.available_capacity,
