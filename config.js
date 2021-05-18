@@ -9,7 +9,9 @@ exports.config = {
       port: 587
     },
   },
-  filter: {
-    pin: ""
+  ilter: {
+    pin: "",
+    district: "",
+    centerIds: []
   },
 };

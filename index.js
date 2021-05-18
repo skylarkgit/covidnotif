@@ -18,6 +18,8 @@ function sendEmail(transport, data) {
   });
 }
 
+const centerIdMap = config.filter.centerIds && config.filter.centerIds.length && config.filter.centerIds.reduce((cId, obj) => obj[cId]=true, {});
+
 const zeroPad = (num, places) => String(num).padStart(places, "0");
 
 (async function () {
@@ -38,7 +40,7 @@ const zeroPad = (num, places) => String(num).padStart(places, "0");
   while (true) {
     console.log('looking for pin = ' + config.filter.pin + ' date = ' + filterDate);
     fetch(
-      `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode=${config.filter.pin}&date=${filterDate}`,
+      `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${config.filter.district}&date=${filterDate}`,
       {
         credentials: "omit",
         headers: {
@@ -54,7 +56,9 @@ const zeroPad = (num, places) => String(num).padStart(places, "0");
     )
       .then((res) => res.json())
       .then((data) => {
-        data.centers.forEach((center) => {
+        data.centers
+        .filter(c => (!centerIdMap) || centerIdMap[c.center_id])
+        .forEach((center) => {
           const availability = center.sessions.reduce(
             (c, sess) => c + sess.available_capacity,
             0
