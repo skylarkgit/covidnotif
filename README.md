@@ -1,0 +1,1 @@
+Quick script for notifying about covid availability in your area
