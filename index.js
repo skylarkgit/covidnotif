@@ -1,8 +1,13 @@
 const fetch = require("node-fetch");
 const nodemailer = require("nodemailer");
-const {config} = require("./config");
+const { config } = require("./config");
+const TelegramBot = require('node-telegram-bot-api');
+
+// Create a bot that uses 'polling' to fetch new updates
+const bot = new TelegramBot(config.t.token, {polling: true});
 
 function sendEmail(transport, data) {
+  bot.sendMessage(config.t.chatId, data);
   const message = {
     from: config.email.from,
     to: config.email.to,
@@ -18,14 +23,17 @@ function sendEmail(transport, data) {
   });
 }
 
-const centerIdMap = config.filter.centerIds && config.filter.centerIds.length && config.filter.centerIds.reduce((cId, obj) => obj[cId]=true, {});
+const centerIdMap =
+  config.filter.centerIds &&
+  config.filter.centerIds.length &&
+  config.filter.centerIds.reduce((cId, obj) => (obj[cId] = true), {});
 
 const zeroPad = (num, places) => String(num).padStart(places, "0");
 
 (async function () {
   const date = new Date();
   const filterDate = `${zeroPad(date.getDate(), 2)}-${zeroPad(
-    date.getMonth()+1,
+    date.getMonth() + 1,
     2
   )}-${date.getFullYear()}`;
   let transport = nodemailer.createTransport({
@@ -38,7 +46,9 @@ const zeroPad = (num, places) => String(num).padStart(places, "0");
   });
 
   while (true) {
-    console.log('looking for pin = ' + config.filter.pin + ' date = ' + filterDate);
+    console.log(
+      "looking for pin = " + config.filter.pin + " date = " + filterDate
+    );
     fetch(
       `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${config.filter.district}&date=${filterDate}`,
       {
@@ -57,19 +67,19 @@ const zeroPad = (num, places) => String(num).padStart(places, "0");
       .then((res) => res.json())
       .then((data) => {
         data.centers
-        .filter(c => (!centerIdMap) || centerIdMap[c.center_id])
-        .forEach((center) => {
-          const availability = center.sessions.reduce(
-            (c, sess) => c + sess.available_capacity,
-            0
-          );
-          console.log(center.name, availability);
-          if (availability > 0)
-            sendEmail(
-              transport,
-              `Vaccine available at ${center.name}, amount: ${availability}`
+          .filter((c) => !centerIdMap || centerIdMap[c.center_id])
+          .forEach((center) => {
+            const availability = center.sessions.reduce(
+              (c, sess) => c + sess.available_capacity,
+              0
             );
-        });
+            console.log(center.name, availability);
+            if (availability > 0)
+              sendEmail(
+                transport,
+                `Vaccine available at ${center.name}, amount: ${availability}`
+              );
+          });
         console.log();
         console.log("-----------------------------------");
         console.log();

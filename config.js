@@ -14,4 +14,8 @@ exports.config = {
     district: "",
     centerIds: []
   },
+  t: {
+    chatId: 0,
+    token: ''
+  }
 };
